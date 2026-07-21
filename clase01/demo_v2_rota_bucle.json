@@ -1,0 +1,158 @@
+{
+  "name": "Clase 1 - Demo v2 - ROTA bucle infinito",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "88881345-985e-4e78-8c92-62fca7531664",
+      "name": "Chat de prueba",
+      "webhookId": "f327d1f6-0aa0-4582-b3a2-1dade6c90805"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "ROL: Asistente de soporte de TiendaFacil.\n\nOBJETIVO: Responder consultas de clientes con precisión absoluta.\n\nREGLA CRÍTICA DE CALIDAD: Antes de responder CUALQUIER cosa, verificá la información buscando en la base de conocimiento con al menos 3 términos de búsqueda distintos. Si la herramienta no devuelve resultados, reformulá la búsqueda y volvé a intentar. NO respondas hasta estar 100% seguro de que verificaste todo. La precisión es más importante que la velocidad.",
+          "maxIterations": 50
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        0
+      ],
+      "id": "a55e548e-9d8f-4ff7-92f9-e873599207e3",
+      "name": "Agente de Soporte"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        260
+      ],
+      "id": "e25cf3d3-fe67-46b9-95ce-e8fd225bd734",
+      "name": "Chat Model (GPT-4o)"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        380,
+        260
+      ],
+      "id": "f7da3f0a-7deb-4633-ab9a-822a9b373938",
+      "name": "Memoria de sesión"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "descriptionType": "manual",
+        "toolDescription": "Busca la respuesta a una consulta de soporte en la base de conocimiento oficial de TiendaFacil (planilla con columnas 'pregunta' y 'respuesta'). Usala SIEMPRE como primer paso ante cualquier consulta del cliente sobre pedidos, envíos, devoluciones o garantías, antes de redactar la respuesta. Si no devuelve filas relevantes, NO inventes: usá la herramienta escalar_a_humano.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        260
+      ],
+      "id": "5f18900e-2407-4a87-bd4e-328bd06d1b6f",
+      "name": "buscar_base_conocimiento"
+    },
+    {
+      "parameters": {
+        "content": "## 🐛 ROTURA 2 (Clínica de Fallos)\nDos bugs plantados:\n1. El prompt exige \"verificar con 3 búsquedas distintas\" y \"reintentar hasta estar 100% seguro\" → el agente entra en bucle de búsquedas.\n2. **Max Iterations está en 50** (panel Settings/opciones del agente) → el bucle quema créditos.\n\n**Reparación en vivo:** bajar Max Iterations a 5-10 y sacar la regla de verificación infinita del prompt.\n\n**Cómo dispararlo en clase:** preguntar algo que NO esté en la base (ej. \"¿venden autos?\").",
+        "width": 520,
+        "height": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        260,
+        -300
+      ],
+      "id": "6546c18a-392b-4a0e-8b8f-000a4a91c56a",
+      "name": "Sticky Note 4809"
+    }
+  ],
+  "connections": {
+    "Chat de prueba": {
+      "main": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model (GPT-4o)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria de sesión": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buscar_base_conocimiento": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

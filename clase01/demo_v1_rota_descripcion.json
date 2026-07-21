@@ -1,0 +1,158 @@
+{
+  "name": "Clase 1 - Demo v1 - ROTA descripcion vaga",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d8e93d37-b1e5-4a97-8f7f-af77861a4363",
+      "name": "Chat de prueba",
+      "webhookId": "7c3b3424-f67a-43f0-82ad-2f56fcecd816"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "Sos un asistente de soporte. Ayudá al cliente con lo que pida usando las herramientas disponibles.",
+          "maxIterations": 8
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        0
+      ],
+      "id": "5a892a02-461d-4606-86d3-3df3d60d211c",
+      "name": "Agente de Soporte"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        260
+      ],
+      "id": "6a8c7693-d148-4243-971d-8707ee5eccd5",
+      "name": "Chat Model (GPT-4o)"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        380,
+        260
+      ],
+      "id": "950bc910-ab8b-4b9f-9b33-8e0393df02d8",
+      "name": "Memoria de sesión"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "descriptionType": "manual",
+        "toolDescription": "Busca cosas.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        260
+      ],
+      "id": "c74cebb2-55ed-42e2-a32c-8bb6e4e9896b",
+      "name": "tool1"
+    },
+    {
+      "parameters": {
+        "content": "## 🐛 ROTURA 1 (intencional)\nLa tool se llama **tool1** y su descripción es \"Busca cosas.\"\nEl agente no sabe cuándo usarla: la ignora o la usa mal.\n\n**Reparación en vivo:** renombrarla a buscar_base_conocimiento y escribir la descripción completa (ver workflow v3).",
+        "width": 460,
+        "height": 220,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        260,
+        -260
+      ],
+      "id": "8824266f-8be1-441f-98e6-567a475fd534",
+      "name": "Sticky Note bfd1"
+    }
+  ],
+  "connections": {
+    "Chat de prueba": {
+      "main": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model (GPT-4o)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria de sesión": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tool1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

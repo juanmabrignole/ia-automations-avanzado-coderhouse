@@ -1,0 +1,250 @@
+{
+  "name": "Clase 1 - Demo v3 - FINAL reparada",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "db35b72c-0713-4dfc-86ef-89615f2bee65",
+      "name": "Chat de prueba",
+      "webhookId": "112487d0-908b-4dd3-85b0-2e8c8c02c120"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "ROL: Sos el asistente de soporte de primera línea de la empresa (ficticia) TiendaFacil, un ecommerce de electrodomésticos.\n\nÁMBITO: Solo respondés consultas sobre pedidos, envíos, devoluciones y garantías de TiendaFacil. Cualquier otro tema (opiniones, temas personales, otras empresas) está fuera de tu alcance: respondé amablemente que no podés ayudar con eso.\n\nOBJETIVO: Resolver la consulta del cliente usando exclusivamente la información de la base de conocimiento. Si la base tiene la respuesta, respondé en 2 a 4 oraciones, tono cordial rioplatense.\n\nREGLAS Y ESCALAMIENTO:\n1. SIEMPRE buscá primero en la base de conocimiento con la herramienta buscar_base_conocimiento.\n2. NUNCA inventes datos de pedidos, plazos ni políticas. Si la base no tiene la respuesta, usá escalar_a_humano y avisale al cliente que un humano lo va a contactar.\n3. NO tenés permitido: prometer reembolsos, modificar pedidos ni dar información de otros clientes.\n4. Si el cliente insulta o está muy enojado, escalá directamente a un humano.",
+          "maxIterations": 8
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        0
+      ],
+      "id": "22275d23-b69e-42ab-ac50-32e223fc52be",
+      "name": "Agente de Soporte"
+    },
+    {
+      "parameters": {
+        "sendTo": "profe@ejemplo.com",
+        "subject": "✅ Tarea completada - Agente de Soporte TiendaFacil",
+        "message": "=El agente completó una interacción.\n\nConsulta del cliente:\n{{ $('Chat de prueba').item.json.chatInput }}\n\nRespuesta final del agente:\n{{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        600,
+        0
+      ],
+      "id": "86dda216-6c2c-4ee3-b2ed-135f8309d061",
+      "name": "Log de auditoría"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "851f54cd-6275-4b3a-8d73-7865dfe17b2d",
+              "name": "output",
+              "type": "string",
+              "value": "={{ $('Agente de Soporte').item.json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        860,
+        0
+      ],
+      "id": "013979d2-d85a-4b08-a1c4-9fd2d2b6c9b3",
+      "name": "Respuesta al chat"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        280
+      ],
+      "id": "a59d4a9e-9d37-4fb8-a379-440d9483b5fb",
+      "name": "Chat Model (GPT-4o)"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        340,
+        280
+      ],
+      "id": "a0e76f1c-e08e-4e53-aea5-270cf42ca163",
+      "name": "Memoria de sesión"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "descriptionType": "manual",
+        "toolDescription": "Busca la respuesta a una consulta de soporte en la base de conocimiento oficial de TiendaFacil (planilla con columnas 'pregunta' y 'respuesta'). Usala SIEMPRE como primer paso ante cualquier consulta del cliente sobre pedidos, envíos, devoluciones o garantías, antes de redactar la respuesta. Si no devuelve filas relevantes, NO inventes: usá la herramienta escalar_a_humano.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        280
+      ],
+      "id": "a9b5f97b-4050-4234-adae-a5df4083fa1e",
+      "name": "buscar_base_conocimiento"
+    },
+    {
+      "parameters": {
+        "sendTo": "profe@ejemplo.com",
+        "subject": "={{ $fromAI('asunto', 'Asunto breve del caso escalado, ej: Cliente pregunta por garantia extendida') }}",
+        "message": "={{ $fromAI('detalle', 'Resumen del caso: que pregunto el cliente, que se busco en la base y por que se escala') }}",
+        "options": {},
+        "descriptionType": "manual",
+        "toolDescription": "Escala el caso a un humano del equipo enviando un email con el resumen. Usala SOLO cuando la base de conocimiento no tiene la respuesta, cuando el cliente pide algo fuera de tu alcance, o cuando esta muy enojado. Nunca la uses antes de buscar en la base."
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        740,
+        260
+      ],
+      "id": "3b115e43-7782-4bfe-90d6-e4fc9bd55bba",
+      "name": "escalar_a_humano"
+    },
+    {
+      "parameters": {
+        "content": "## ✅ VERSIÓN FINAL (la que cumple la rúbrica)\n1. System Prompt modular: Rol → Ámbito → Objetivo → Reglas\n2. Tools acopladas LATERALES con descripción semántica completa\n3. Max Iterations = 8 (guardrail financiero, 35% de la rúbrica)\n4. Log de auditoría por Gmail al terminar (observabilidad, 35%)\n\n**Setup:** elegir credencial + planilla en buscar_base_conocimiento, credencial Gmail en los 2 nodos de mail, y tu email real en sendTo.",
+        "width": 560,
+        "height": 300,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        220,
+        -340
+      ],
+      "id": "e5c350b0-7a6d-40c9-9a7a-45f76e66c986",
+      "name": "Sticky Note 1d88"
+    }
+  ],
+  "connections": {
+    "Chat de prueba": {
+      "main": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model (GPT-4o)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria de sesión": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente de Soporte": {
+      "main": [
+        [
+          {
+            "node": "Log de auditoría",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log de auditoría": {
+      "main": [
+        [
+          {
+            "node": "Respuesta al chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buscar_base_conocimiento": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "escalar_a_humano": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de Soporte",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

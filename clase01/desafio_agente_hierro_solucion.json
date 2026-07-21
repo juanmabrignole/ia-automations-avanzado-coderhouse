@@ -1,0 +1,429 @@
+{
+  "name": "Clase 1 - Agente de Hierro - Solucion de referencia",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Cargar factura para aprobación",
+        "formDescription": "Solución de referencia del desafío 'Agente de Hierro' (Clase 1)",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Proveedor",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Número de factura",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Monto de la factura",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Monto de la orden de compra",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Detalle o motivo de la diferencia (si la hay)"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6b6af74c-2c79-46e9-b8eb-5e0830a46313",
+      "name": "Cargar factura",
+      "webhookId": "df153c8e-d9c8-4fd3-8086-655e83dc3479"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "538b41d5-6b33-4cff-a49f-d32ad6179cd4",
+              "name": "proveedor",
+              "type": "string",
+              "value": "={{ $json['Proveedor'] }}"
+            },
+            {
+              "id": "ce7a56d4-5f59-4847-8490-538fc58e0680",
+              "name": "numero",
+              "type": "string",
+              "value": "={{ $json['Número de factura'] }}"
+            },
+            {
+              "id": "173ea174-17d0-452e-b2dc-02048342dee4",
+              "name": "monto_factura",
+              "type": "number",
+              "value": "={{ Number($json['Monto de la factura']) }}"
+            },
+            {
+              "id": "1367ba83-9fca-4c9d-a7c8-d44b9ed709ca",
+              "name": "monto_oc",
+              "type": "number",
+              "value": "={{ Number($json['Monto de la orden de compra']) }}"
+            },
+            {
+              "id": "4b067798-fdc9-4819-b43c-9d168f4d0458",
+              "name": "detalle",
+              "type": "string",
+              "value": "={{ $json['Detalle o motivo de la diferencia (si la hay)'] || 'Sin detalle' }}"
+            },
+            {
+              "id": "c0049dda-5eb7-4585-a5e7-1216d0ba2150",
+              "name": "discrepancia_pct",
+              "type": "number",
+              "value": "={{ Math.round(Math.abs(Number($json['Monto de la factura']) - Number($json['Monto de la orden de compra'])) / Math.max(Number($json['Monto de la orden de compra']), 1) * 10000) / 100 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        0
+      ],
+      "id": "1f8abdc2-7401-4703-84f1-abed611d3ecb",
+      "name": "Calcular discrepancia"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e9d4dafc-3e54-409d-a382-68e97dfedee8",
+              "leftValue": "={{ $json.discrepancia_pct }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ],
+      "id": "3d405e7f-75d0-484a-bb79-dcd017783746",
+      "name": "¿Discrepancia menor al 2%?"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb1df082-24da-4ca8-b493-8b90a4a030a3",
+              "name": "resultado",
+              "type": "string",
+              "value": "APROBADA AUTOMÁTICA (discrepancia dentro de tolerancia)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        760,
+        -160
+      ],
+      "id": "b7482d46-b207-46d0-b862-66c96b5ab3db",
+      "name": "Aprobada automática"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analizá esta factura con discrepancia:\nProveedor: {{ $json.proveedor }}\nFactura N°: {{ $json.numero }}\nMonto factura: ${{ $json.monto_factura }}\nMonto orden de compra: ${{ $json.monto_oc }}\nDiscrepancia: {{ $json.discrepancia_pct }}%\nMotivo declarado: {{ $json.detalle }}",
+        "options": {
+          "systemMessage": "ROL: Sos analista de cuentas a pagar de una empresa mediana.\n\nÁMBITO: Analizás UNA factura con discrepancia entre el monto facturado y la orden de compra. No aprobás ni rechazás: eso lo decide un humano.\n\nOBJETIVO: Redactar un análisis breve (máximo 120 palabras) para que un gerente decida en 30 segundos. Incluí: 1) magnitud de la discrepancia en $ y %, 2) evaluación del motivo declarado (¿es razonable? ¿falta información?), 3) tu recomendación: APROBAR, RECHAZAR o PEDIR MÁS INFORMACIÓN.\n\nREGLAS:\n1. NO inventes políticas ni montos: trabajá solo con los datos recibidos.\n2. Si el motivo declarado es 'Sin detalle' y la discrepancia supera el 10%, tu recomendación debe ser RECHAZAR o PEDIR MÁS INFORMACIÓN, nunca APROBAR.\n3. Respondé en texto plano, sin markdown.",
+          "maxIterations": 5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        760,
+        120
+      ],
+      "id": "92df04b4-ba8e-42f1-a1a3-184b92226557",
+      "name": "Analista de discrepancias"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        340
+      ],
+      "id": "043b408f-4488-45e5-b0b2-9c9606a3aadb",
+      "name": "Chat Model (GPT-4o)"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "gerente@ejemplo.com",
+        "subject": "=Aprobación requerida: factura {{ $('Calcular discrepancia').item.json.numero }} de {{ $('Calcular discrepancia').item.json.proveedor }}",
+        "message": "=Hay una factura con discrepancia esperando tu decisión.\n\nAnálisis del agente:\n{{ $json.output }}\n\nAprobá o rechazá con los botones de este email.",
+        "responseType": "approval",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1020,
+        120
+      ],
+      "id": "0d0f0aaf-35be-41c6-ab0b-8dfd419066ef",
+      "name": "Aprobación humana (email)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "450df3cd-09c2-496a-9afa-a96c01d8e214",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        120
+      ],
+      "id": "c5d25d6c-6fa0-4e80-9d35-ea7e37ac6373",
+      "name": "¿Aprobó el gerente?"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "545b5645-069f-45e9-829a-27e9a42b8be9",
+              "name": "resultado",
+              "type": "string",
+              "value": "APROBADA POR HUMANO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        20
+      ],
+      "id": "5fca4ac0-3e1b-435d-a45b-de2f0c04f6dd",
+      "name": "Aprobada por humano"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "13857f28-7f64-4851-a24f-1bf171f60cda",
+              "name": "resultado",
+              "type": "string",
+              "value": "RECHAZADA POR HUMANO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        220
+      ],
+      "id": "56979fcc-d54c-4f28-8e3a-976909e8355f",
+      "name": "Rechazada por humano"
+    },
+    {
+      "parameters": {
+        "content": "## 🏗️ Solución de referencia · Agente de Hierro\nLa frontera lineal/agente es el diseño:\n- **Lineal**: cálculo de discrepancia + tolerancia del 2% (nodo IF)\n- **Agente**: SOLO analiza lo ambiguo (Max Iterations = 5 → condición de parada por intentos)\n- **Humano**: aprueba por email antes de cualquier efecto\n\nMostrar DESPUÉS de la puesta en común, no antes.",
+        "width": 520,
+        "height": 240,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -260
+      ],
+      "id": "cb6bc586-0779-4cae-af43-fa2f369978f2",
+      "name": "Nota e3e9"
+    },
+    {
+      "parameters": {
+        "content": "## 👤 Punto de aprobación humana\nGmail 'Send and Wait': el flujo queda pausado hasta que el gerente toca Aprobar/Rechazar en el email.",
+        "width": 380,
+        "height": 130,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        980,
+        -140
+      ],
+      "id": "53993b3a-fd89-41fb-9cbc-1be082b92804",
+      "name": "Nota 794c"
+    }
+  ],
+  "connections": {
+    "Cargar factura": {
+      "main": [
+        [
+          {
+            "node": "Calcular discrepancia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular discrepancia": {
+      "main": [
+        [
+          {
+            "node": "¿Discrepancia menor al 2%?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Discrepancia menor al 2%?": {
+      "main": [
+        [
+          {
+            "node": "Aprobada automática",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analista de discrepancias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analista de discrepancias": {
+      "main": [
+        [
+          {
+            "node": "Aprobación humana (email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model (GPT-4o)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analista de discrepancias",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aprobación humana (email)": {
+      "main": [
+        [
+          {
+            "node": "¿Aprobó el gerente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Aprobó el gerente?": {
+      "main": [
+        [
+          {
+            "node": "Aprobada por humano",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rechazada por humano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
