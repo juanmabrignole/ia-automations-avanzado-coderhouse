@@ -1,0 +1,136 @@
+{
+  "name": "Clase 01 · Desafío Agente de Hierro (scaffold para diseñar en equipo)",
+  "nodes": [
+    {
+      "id": "2d6b08ba-90a3-4713-b7c7-e51744e86efc",
+      "name": "Desafío: Agente de Hierro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        "## 🛠️ Desafío: Arquitectura del Agente de Hierro\n\nCaso: Aprobación de Facturas con Discrepancias — llega una factura cuyo monto no coincide con la orden de compra.\n\n**15 min diseño + 8 min puesta en común.** En salas, diseñen la arquitectura en Miro o papel — NO la construyan en n8n todavía.\n\n4 requisitos obligatorios del diseño:\n1. Una herramienta de lectura de facturas\n2. Un nodo de validación lógica\n3. Un punto de aprobación humana\n4. Una condición de parada por intentos\n\nEste JSON es el scaffold para prototipar en n8n DESPUÉS de tener el diseño en papel, si el tiempo lo permite."
+      ],
+      "parameters": {
+        "content": 240,
+        "height": 340,
+        "width": 560,
+        "color": 5
+      }
+    },
+    {
+      "id": "02d54d81-4ead-4527-ac14-579848cada6d",
+      "name": "Webhook - Factura con discrepancia",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        340
+      ],
+      "webhookId": "7bccd9a2-42df-489e-a701-4d8253ca8000",
+      "parameters": {
+        "path": "factura-discrepancia",
+        "options": {},
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "id": "377ffc0a-a0c3-44c6-83dd-38dd72973df5",
+      "name": "AI Agent - [Completar]",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        620,
+        340
+      ],
+      "parameters": {
+        "agent": "toolsAgent",
+        "promptType": "auto",
+        "options": {
+          "systemMessage": "[COMPLETAR EN EQUIPO — diseño primero en Miro o papel, esto es solo para prototipar después]\n\nRol y Ámbito: ¿qué identidad técnica tiene? ¿qué NO puede hacer?\n\nObjetivo Operativo: ¿qué resultado exacto tiene que lograr con una factura que no coincide con la orden de compra?\n\nReglas de Herramientas: ¿qué Tools necesita y cómo debe usarlas?\n\nEscalamiento (Guardrails): ¿cuándo detiene el ciclo y deriva a un humano?",
+          "maxIterations": 8
+        }
+      }
+    },
+    {
+      "id": "5b408399-4205-4494-8379-20b43890604c",
+      "name": "Tool 1 - lectura de facturas",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        640,
+        "Requisito 1: herramienta que lee/extrae los datos de la factura (ej. parseo de PDF, OCR, o Google Drive + Sheets)."
+      ],
+      "parameters": {
+        "content": 620,
+        "height": 140,
+        "width": 280,
+        "color": 7
+      }
+    },
+    {
+      "id": "83ba5c5d-96fe-4a49-be82-f16f46bf8120",
+      "name": "Nodo 2 - validación lógica",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        640,
+        "Requisito 2: compara la factura contra la orden de compra y decide si la discrepancia es aceptable."
+      ],
+      "parameters": {
+        "content": 940,
+        "height": 140,
+        "width": 280,
+        "color": 7
+      }
+    },
+    {
+      "id": "4fc9ccf1-09d3-4875-bbbc-0227754e9539",
+      "name": "Punto 3 - aprobación humana",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        820,
+        "Requisito 3: ¿en qué paso exacto un humano tiene que aprobar antes de continuar?"
+      ],
+      "parameters": {
+        "content": 620,
+        "height": 140,
+        "width": 280,
+        "color": 6
+      }
+    },
+    {
+      "id": "f62fecb6-0fa3-496e-9f04-b82021fe36f4",
+      "name": "Condición 4 - parada por intentos",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        820,
+        "Requisito 4: ¿cuántos intentos máximo antes de escalar automáticamente, sin loopear?"
+      ],
+      "parameters": {
+        "content": 940,
+        "height": 140,
+        "width": 280,
+        "color": 6
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Factura con discrepancia": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - [Completar]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "clase01-ai-automation-avanzado"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "actividad": "¿Flujo o agente? El test de decisión",
+  "duracion_min": 15,
+  "fuente": "Escenarios de Lucas Barrantes (comisión 97480), con respuesta y justificación agregadas para esta guía.",
+  "instrucciones": "Proyectá cada escenario (o usá una encuesta de Zoom). Los alumnos votan: ¿automatización lineal o agente autónomo? La pregunta clave siempre es: ¿este proceso necesita reglas o necesita criterio? Después de cada votación, justificá la respuesta.",
+  "escenarios": [
+    {
+      "id": 1,
+      "escenario": "Al recibir un formulario web, enviar un mensaje a Slack.",
+      "respuesta": "Automatización lineal",
+      "justificacion": "Trigger → Acción directa, sin ninguna decisión en el medio. Un nodo IF ni siquiera hace falta."
+    },
+    {
+      "id": 2,
+      "escenario": "Leer cada lead que entra, investigar su empresa y decidir si agendar reunión.",
+      "respuesta": "Agente autónomo",
+      "justificacion": "Requiere investigar (usar herramientas), interpretar lo que encuentra y tomar una decisión no anticipable con una regla fija."
+    },
+    {
+      "id": 3,
+      "escenario": "Todos los lunes a las 9:00, exportar las ventas de la semana a una planilla.",
+      "respuesta": "Automatización lineal",
+      "justificacion": "Tarea programada y determinista. Cron + acción, sin ambigüedad que resolver."
+    },
+    {
+      "id": 4,
+      "escenario": "Recibir tickets de soporte y resolver los simples, escalando los complejos.",
+      "respuesta": "Agente autónomo",
+      "justificacion": "El sistema tiene que evaluar caso por caso qué es 'simple' y qué es 'complejo' — ese criterio no se puede escribir como una lista fija de reglas IF."
+    },
+    {
+      "id": 5,
+      "escenario": "Cuando una factura supera $50.000, pedir aprobación al gerente.",
+      "respuesta": "Automatización lineal",
+      "justificacion": "Umbral numérico claro (monto > $50.000). Un nodo IF alcanza y sobra."
+    },
+    {
+      "id": 6,
+      "escenario": "Leer contratos recibidos y evaluar si las cláusulas cumplen la política interna.",
+      "respuesta": "Agente autónomo",
+      "justificacion": "Requiere leer e interpretar texto legal contra una política — juicio, no coincidencia de patrones."
+    }
+  ]
+}

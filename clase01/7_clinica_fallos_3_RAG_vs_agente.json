@@ -1,0 +1,99 @@
+{
+  "name": "Clase 01 · Clínica de fallos #3 (RAG vs. agente)",
+  "nodes": [
+    {
+      "id": "5af24ad0-b6c6-45da-abe2-ecc07544836c",
+      "name": "Clínica de fallos #3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        60,
+        "## 🔍 Clínica de fallos #3\n\n¿Qué está mal en este flujo?\n\nPista: leé bien el nombre del nodo y lo que promete el prompt ('decidir y ejecutar la acción necesaria'). Ahora mirá qué tipo de nodo es realmente y qué Tools tiene conectadas."
+      ],
+      "parameters": {
+        "content": 240,
+        "height": 210,
+        "width": 460,
+        "color": 3
+      }
+    },
+    {
+      "id": "b96ab021-af65-4e02-b0d1-43825ec96aa6",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "5f989361-7807-4ed9-9aa5-2f5c340a90c2",
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "dca7a80e-a139-4a7f-a95f-81bf5e9338b5",
+      "name": "Agente de Atención al Cliente",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        560,
+        300
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "Sos el Agente de Atención al Cliente. Tu trabajo es leer la consulta del usuario, decidir qué hacer y ejecutar la acción necesaria (por ejemplo, cancelar un turno, actualizar un pedido o escalar un reclamo).\n\nConsulta del usuario: {{ $json.chatInput }}"
+      }
+    },
+    {
+      "id": "aef02889-895e-4ced-9059-d396d5c55235",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        540,
+        460
+      ],
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "credentials": {
+        "groqApi": {
+          "id": "REEMPLAZAR_CON_TU_CREDENCIAL",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Agente de Atención al Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de Atención al Cliente",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "clase01-ai-automation-avanzado"
+  }
+}

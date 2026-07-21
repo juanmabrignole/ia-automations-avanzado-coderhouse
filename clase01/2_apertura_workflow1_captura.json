@@ -1,0 +1,110 @@
+{
+  "name": "Clase 01 · Apertura Workflow 1 (Captura)",
+  "nodes": [
+    {
+      "id": "507d0c6a-b9cc-4044-aff0-8b20961cbe3b",
+      "name": "Apertura · Workflow 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        60,
+        "## Apertura · Workflow 1 (Captura)\n\nForm Trigger → Google Sheets (Append). Cero código.\n\nAntes de la clase: creá el formulario con los campos de icebreaker que quieras (país, rol, experiencia con n8n, etc.) y una Google Sheet con esas mismas columnas. Reemplazá el `documentId` del nodo Google Sheets por el ID real de tu planilla."
+      ],
+      "parameters": {
+        "content": 240,
+        "height": 210,
+        "width": 460,
+        "color": 5
+      }
+    },
+    {
+      "id": "44fd74fb-ffcc-4456-a43e-7a09d2715012",
+      "name": "Form Trigger",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "94798d35-9cd7-4af9-8b68-d6dd9f4d0af5",
+      "parameters": {
+        "formTitle": "Queremos conocerte",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "País",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Edad",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Rol",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Industria",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Experiencia con n8n (1-5)",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "¿Qué te interesa más de este módulo?",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Mate o café",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "549e423e-7d31-43bd-bf79-382c654bb1ac",
+      "name": "Google Sheets (Append)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        300
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REEMPLAZAR_CON_TU_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Respuestas",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "notes": "Guarda cada respuesta como fila nueva en la hoja 'Respuestas'. Reemplazar documentId por tu Spreadsheet real."
+    }
+  ],
+  "connections": {
+    "Form Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Append)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "clase01-ai-automation-avanzado"
+  }
+}
