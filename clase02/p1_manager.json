@@ -1,0 +1,191 @@
+{
+  "name": "Clase 2 - Practica 1 - Manager (orquesta a los Workers)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9cc7e038-6542-41fb-957d-b28da6f8de87",
+      "name": "Pedido del cliente",
+      "webhookId": "18a924f8-2ce6-4804-a853-fbef209f52b3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "ROL: Sos el Manager de un equipo de dos especialistas para armar planes de lanzamiento de producto.\n\nOBJETIVO: Cuando el cliente te pida un plan de lanzamiento para un producto y público objetivo, coordiná a tu equipo:\n1. Llamá PRIMERO a consultar_investigador_de_mercado con el tema y el público objetivo.\n2. Llamá DESPUÉS a pedir_plan_de_lanzamiento, pasándole el tema y los hallazgos COMPLETOS que recibiste en el paso 1 (no los resumas ni los recortes).\n3. Presentá el plan final al cliente, mencionando brevemente en qué hallazgo se basó cada punto.\n\nREGLAS: Nunca inventes un plan vos mismo: siempre pasa por los dos especialistas, en ese orden.",
+          "maxIterations": 6
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        0
+      ],
+      "id": "44952ef0-96eb-4511-825a-8e2b2568ad7e",
+      "name": "Manager"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        180,
+        260
+      ],
+      "id": "00f2c18b-0db7-4906-96a8-76b4771a164a",
+      "name": "Chat Model (Groq)"
+    },
+    {
+      "parameters": {
+        "name": "consultar_investigador_de_mercado",
+        "description": "Investiga el mercado para un tema y público objetivo dados. Usala PRIMERO, antes de pedir el plan de lanzamiento, porque el redactor necesita estos hallazgos.",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Clase 2 - Worker A - Investigador de Mercado"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tema": "={{ $fromAI('tema', 'El tema o producto a investigar') }}",
+            "publico_objetivo": "={{ $fromAI('publico_objetivo', 'El publico objetivo del producto') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        280,
+        260
+      ],
+      "id": "c6d8a96d-47bb-417c-b79b-af30d8efd10b",
+      "name": "consultar_investigador_de_mercado"
+    },
+    {
+      "parameters": {
+        "name": "pedir_plan_de_lanzamiento",
+        "description": "Redacta el plan de lanzamiento de producto a partir del tema y los hallazgos de mercado. Usala SIEMPRE DESPUES de consultar_investigador_de_mercado, pasándole los hallazgos completos que esa tool devolvió.",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "Clase 2 - Worker B - Redactor de Plan"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tema": "={{ $fromAI('tema', 'El tema o producto') }}",
+            "hallazgos": "={{ $fromAI('hallazgos', 'Los hallazgos de mercado completos devueltos por el investigador') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        500,
+        260
+      ],
+      "id": "744625c9-c8d7-4db1-8322-f7b2b0fdfbf1",
+      "name": "pedir_plan_de_lanzamiento"
+    },
+    {
+      "parameters": {
+        "content": "## Práctica 1: Un Reto, Tres Arquitecturas -> versión Manager-Worker\nEste es el sistema completo: Manager + 2 Workers (archivos separados).\nEl 'contrato de datos' se ve en cada Tool Workflow: qué campos exactos definimos en workflowInputs.\n\nPara probar en vivo: abrí el chat de este workflow y pedí, por ejemplo:\n'Armame un plan de lanzamiento para una app de meditación, dirigida a profesionales con estrés laboral.'",
+        "width": 560,
+        "height": 260,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -300
+      ],
+      "id": "d4305cf4-bb1d-4d73-bf5b-c0f9b99e47e7",
+      "name": "Nota c8ce"
+    },
+    {
+      "parameters": {
+        "content": "## Setup antes de la demo\nEn AMBOS nodos Tool Workflow, hacé clic en el selector de workflow y elegí el Worker correspondiente por nombre (el JSON los referencia por nombre, no por ID, así que hay que re-seleccionarlos tras importar).",
+        "width": 400,
+        "height": 140,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        280,
+        520
+      ],
+      "id": "7ca9e9cd-96d7-4f49-913a-32587a209ef6",
+      "name": "Nota 45d7"
+    }
+  ],
+  "connections": {
+    "Pedido del cliente": {
+      "main": [
+        [
+          {
+            "node": "Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model (Groq)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Manager",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_investigador_de_mercado": {
+      "ai_tool": [
+        [
+          {
+            "node": "Manager",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pedir_plan_de_lanzamiento": {
+      "ai_tool": [
+        [
+          {
+            "node": "Manager",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

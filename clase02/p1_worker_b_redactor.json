@@ -1,0 +1,128 @@
+{
+  "name": "Clase 2 - Worker B - Redactor de Plan",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c1b9283f-fb48-42ef-bf29-828e1988744e",
+      "name": "Recibo del Manager"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tema: {{ $json.tema }}\nHallazgos de mercado: {{ $json.hallazgos }}",
+        "options": {
+          "systemMessage": "ROL: Sos redactor de planes de lanzamiento de producto.\n\nOBJETIVO: Con el tema y los hallazgos de mercado que te pasan, redactá un mini plan de lanzamiento de 4 puntos: 1) Propuesta de valor, 2) Canal principal de lanzamiento, 3) Mensaje clave, 4) Primer paso concreto.\n\nREGLAS: Máximo 100 palabras en total. No inventes datos que contradigan los hallazgos recibidos. Si no recibiste hallazgos, decilo explícitamente en vez de inventar.",
+          "maxIterations": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        0
+      ],
+      "id": "ea6e6856-2380-46dd-86a6-9c8c598c42e9",
+      "name": "Redactor de Plan"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        220,
+        240
+      ],
+      "id": "e6ac630a-39d4-4e22-8186-fa6a89deb484",
+      "name": "Chat Model (Groq)"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cb759e2a-0207-4ca1-9c06-b2a561d74514",
+              "name": "plan",
+              "type": "string",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        0
+      ],
+      "id": "3ddfe9ef-3d3b-4d35-965e-f1d3979262eb",
+      "name": "Devolver al Manager"
+    },
+    {
+      "parameters": {
+        "content": "## Worker: Redactor de Plan\nRecibe del Manager: `tema` y `hallazgos` (la salida del OTRO Worker).\nDevuelve: `plan` (texto).\n\nOjo: este Worker depende de que el Manager le pase los hallazgos completos. Si el Manager los recorta, el plan sale pobre (ver Autopsia de Práctica 2).",
+        "width": 460,
+        "height": 210,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -260
+      ],
+      "id": "807569b8-285d-489a-baa8-bac6b684ade6",
+      "name": "Nota 7bdf"
+    }
+  ],
+  "connections": {
+    "Recibo del Manager": {
+      "main": [
+        [
+          {
+            "node": "Redactor de Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redactor de Plan": {
+      "main": [
+        [
+          {
+            "node": "Devolver al Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model (Groq)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Redactor de Plan",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

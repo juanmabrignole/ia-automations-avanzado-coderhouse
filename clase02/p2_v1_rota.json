@@ -1,0 +1,222 @@
+{
+  "name": "Clase 2 - Practica 2 v1 - ROTA (Critic solo formato)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d2a10868-4447-48c5-857d-d4c1e5fecb2a",
+      "name": "Ejecutar autopsia"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd3e0eee-e3c3-4a33-a229-521067460055",
+              "name": "empleado",
+              "type": "string",
+              "value": "Martín"
+            },
+            {
+              "id": "36d4cc49-5720-43e3-9b9f-5c3fbf75e194",
+              "name": "dias_viaje",
+              "type": "number",
+              "value": 7
+            },
+            {
+              "id": "83698354-aec1-430a-900d-8387999207f4",
+              "name": "destino",
+              "type": "string",
+              "value": "Córdoba"
+            },
+            {
+              "id": "0b9b8856-6d88-4de0-977d-b60b59f533ef",
+              "name": "motivo",
+              "type": "string",
+              "value": "Visita a cliente"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        260
+      ],
+      "id": "565132d6-e691-43e1-a0fb-dfb3dfb8c332",
+      "name": "Datos del viaje (fijos)"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a5750ff5-606e-4ac5-afcb-9abe9c3261ff",
+              "name": "instruccion",
+              "type": "string",
+              "value": "=Procesá los datos del viaje de {{ $json.empleado }} y generá el resumen para contabilidad. Viaje de {{ $json.dias_viaje }} días a {{ $json.destino }}, motivo: {{ $json.motivo }}."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        280,
+        260
+      ],
+      "id": "d2dd7b7c-24a1-4afe-b0ff-3c2b1b344a6b",
+      "name": "Planner (instrucción vaga)"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.instruccion }}",
+        "options": {
+          "systemMessage": "ROL: Sos el Worker que procesa reembolsos de gastos de viaje.\n\nOBJETIVO: A partir de la instrucción del Planner, calculá el monto a reembolsar y devolvé SOLO un JSON con este formato exacto:\n{\"fecha\": \"<fecha de hoy>\", \"monto\": <numero>, \"categoria\": \"viaticos\", \"empleado\": \"<nombre>\"}\n\nREGLA: Si no se te especifica una política de viáticos explícita, asumí $50 por día como estándar de mercado. No pidas la política: calculá con ese supuesto y seguí adelante. Respondé SOLO el JSON, sin texto adicional.",
+          "maxIterations": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        260
+      ],
+      "id": "b00a728e-559f-428d-a155-68fd353fa718",
+      "name": "Worker (asume $50/día)"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        440,
+        480
+      ],
+      "id": "73199693-a577-4c1f-90af-80ea80e14761",
+      "name": "Chat Model (Groq)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// CRITIC ROTO: solo revisa que el JSON tenga los campos esperados.\n// NUNCA compara el monto contra ninguna politica real. Por eso es un echo chamber.\nlet raw = $input.first().json.output || '';\nlet data;\ntry {\n  const match = raw.match(/\\{[\\s\\S]*\\}/);\n  data = JSON.parse(match ? match[0] : raw);\n} catch (e) {\n  return [{ json: { resultado: 'RECHAZADO', motivo: 'JSON invalido', raw } }];\n}\n\nconst camposOk = ['fecha', 'monto', 'categoria'].every(c => c in data);\n\nreturn [{\n  json: {\n    ...data,\n    resultado: camposOk ? 'APROBADO' : 'RECHAZADO',\n    motivo_critic: camposOk\n      ? 'El JSON tiene fecha, monto y categoria. Formato valido.'\n      : 'Faltan campos obligatorios.'\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        260
+      ],
+      "id": "89550a22-c1df-442d-99f7-bd55a51f5638",
+      "name": "Critic (solo revisa formato)"
+    },
+    {
+      "parameters": {
+        "content": "## Práctica 2 · VERSIÓN ROTA\nCorré este workflow (botón 'Execute Workflow' o click en 'Ejecutar autopsia').\n\nResultado esperado: el Critic aprueba un reembolso de ~$350 (7 dias x $50), aunque la política real de la empresa es $35/día ($245). Nadie lo detecta porque el Critic solo mira el FORMATO del JSON, nunca el monto.\n\nEsto es exactamente lo que se ve en la slide 'Lo que va a pasar cuando lo corra'.",
+        "width": 560,
+        "height": 260,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -320
+      ],
+      "id": "8d6cd9d1-6276-4fba-b18f-5a1c08c1602b",
+      "name": "Nota a1a2"
+    },
+    {
+      "parameters": {
+        "content": "## El bug, en una frase\nEl Planner nunca le pasó la política de $35/día al Worker (perdida de contexto), y el Critic nunca la pidió porque solo valida estructura, no contenido (echo chamber).",
+        "width": 400,
+        "height": 170,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -260
+      ],
+      "id": "40278431-a548-4c0e-bfb8-242f5ca31250",
+      "name": "Nota a634"
+    }
+  ],
+  "connections": {
+    "Ejecutar autopsia": {
+      "main": [
+        [
+          {
+            "node": "Datos del viaje (fijos)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datos del viaje (fijos)": {
+      "main": [
+        [
+          {
+            "node": "Planner (instrucción vaga)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planner (instrucción vaga)": {
+      "main": [
+        [
+          {
+            "node": "Worker (asume $50/día)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model (Groq)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Worker (asume $50/día)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worker (asume $50/día)": {
+      "main": [
+        [
+          {
+            "node": "Critic (solo revisa formato)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

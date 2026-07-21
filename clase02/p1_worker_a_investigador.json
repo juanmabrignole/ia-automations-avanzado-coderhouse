@@ -1,0 +1,128 @@
+{
+  "name": "Clase 2 - Worker A - Investigador de Mercado",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ea64d06d-31a8-4ffb-8e07-6f4f1f08a07a",
+      "name": "Recibo del Manager"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tema: {{ $json.tema }}\nPúblico objetivo: {{ $json.publico_objetivo }}",
+        "options": {
+          "systemMessage": "ROL: Sos un investigador de mercado.\n\nOBJETIVO: Dado un tema y un público objetivo, generá 3 a 4 hallazgos breves y creíbles sobre el mercado (tendencias, tamaño aproximado, comportamiento del público, competidores típicos). No necesitás fuentes reales: es un ejercicio de práctica, así que generá hallazgos razonables y verosímiles.\n\nFORMATO: Lista de 3-4 hallazgos, cada uno de 1-2 oraciones. Sin introducción ni cierre, solo los hallazgos.",
+          "maxIterations": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        0
+      ],
+      "id": "a27c2252-755a-4daf-a100-ae15786e8e48",
+      "name": "Investigador de Mercado"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        220,
+        240
+      ],
+      "id": "7df0ff17-15b4-492c-885d-915ac2140fbc",
+      "name": "Chat Model (Groq)"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "98f03b00-f8b4-446e-8b5e-0b5791fd7d6f",
+              "name": "hallazgos",
+              "type": "string",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        0
+      ],
+      "id": "26211273-69f7-4377-9884-846dd5419e0c",
+      "name": "Devolver al Manager"
+    },
+    {
+      "parameters": {
+        "content": "## Worker: Investigador de Mercado\nRecibe del Manager: `tema` y `publico_objetivo`.\nDevuelve: `hallazgos` (texto).\n\nEste es el 'contrato de datos' de este Worker: solo entran y salen estos campos.",
+        "width": 460,
+        "height": 200,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -260
+      ],
+      "id": "5607c26c-3699-4514-a52b-af5e87f7db06",
+      "name": "Nota a065"
+    }
+  ],
+  "connections": {
+    "Recibo del Manager": {
+      "main": [
+        [
+          {
+            "node": "Investigador de Mercado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Investigador de Mercado": {
+      "main": [
+        [
+          {
+            "node": "Devolver al Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model (Groq)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Investigador de Mercado",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

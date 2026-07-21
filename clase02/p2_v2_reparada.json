@@ -1,0 +1,258 @@
+{
+  "name": "Clase 2 - Practica 2 v2 - REPARADA (Critic recalcula)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d2a10868-4447-48c5-857d-d4c1e5fecb2a",
+      "name": "Ejecutar autopsia"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd3e0eee-e3c3-4a33-a229-521067460055",
+              "name": "empleado",
+              "type": "string",
+              "value": "Martín"
+            },
+            {
+              "id": "36d4cc49-5720-43e3-9b9f-5c3fbf75e194",
+              "name": "dias_viaje",
+              "type": "number",
+              "value": 7
+            },
+            {
+              "id": "83698354-aec1-430a-900d-8387999207f4",
+              "name": "destino",
+              "type": "string",
+              "value": "Córdoba"
+            },
+            {
+              "id": "0b9b8856-6d88-4de0-977d-b60b59f533ef",
+              "name": "motivo",
+              "type": "string",
+              "value": "Visita a cliente"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        260
+      ],
+      "id": "565132d6-e691-43e1-a0fb-dfb3dfb8c332",
+      "name": "Datos del viaje (fijos)"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fa3e3fcb-bfd8-447b-8855-7781e712defc",
+              "name": "politica_viaticos_dia",
+              "type": "number",
+              "value": 35
+            },
+            {
+              "id": "82c75ff9-53e5-4ddf-9bea-a007ae041a4b",
+              "name": "instruccion",
+              "type": "string",
+              "value": "=Procesá los datos del viaje de {{ $json.empleado }} y generá el resumen para contabilidad. Viaje de {{ $json.dias_viaje }} días a {{ $json.destino }}, motivo: {{ $json.motivo }}. Política vigente de viáticos: $35 por día."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        280,
+        260
+      ],
+      "id": "aea7f4ef-f256-4d92-9e19-3ce616e91ed0",
+      "name": "Planner (incluye política)"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.instruccion }}",
+        "options": {
+          "systemMessage": "ROL: Sos el Worker que procesa reembolsos de gastos de viaje.\n\nOBJETIVO: A partir de la instrucción del Planner (que incluye la política de viáticos vigente), calculá el monto exacto a reembolsar: días de viaje x monto de política por día. Devolvé SOLO un JSON con este formato exacto:\n{\"fecha\": \"<fecha de hoy>\", \"monto\": <numero>, \"categoria\": \"viaticos\", \"empleado\": \"<nombre>\", \"politica_aplicada\": <numero por dia>}\n\nREGLA: Nunca asumas un valor de política: usá siempre el que te pasaron explícitamente. Respondé SOLO el JSON, sin texto adicional.",
+          "maxIterations": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        260
+      ],
+      "id": "ed1091df-b3c7-4846-8d67-2e003cbe00c1",
+      "name": "Worker (usa la política real)"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        440,
+        480
+      ],
+      "id": "f9fa3242-210e-4641-bd94-84633bfce959",
+      "name": "Chat Model (Groq) - Worker"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=JSON del Worker: {{ $json.output }}\nDías de viaje reales: {{ $('Datos del viaje (fijos)').item.json.dias_viaje }}\nPolítica vigente por día: ${{ $('Planner (incluye política)').item.json.politica_viaticos_dia }}",
+        "options": {
+          "systemMessage": "ROL: Sos el Critic que audita reembolsos de gastos de viaje antes de aprobarlos.\n\nOBJETIVO: Recibís el JSON del Worker y los datos originales del viaje (días de viaje y política vigente por día). Tu trabajo es RECALCULAR el monto esperado (días x política) y comparar contra el monto que puso el Worker.\n\nREGLAS:\n1. Si el monto del Worker coincide con tu recálculo (margen de $1 por redondeo), respondé APROBADO.\n2. Si NO coincide, respondé RECHAZADO y explicá la diferencia exacta en pesos.\n3. Nunca apruebes solo por verificar que el JSON tenga los campos: siempre recalculá el número.\n\nRespondé en este formato: RESULTADO: <APROBADO|RECHAZADO>\\nMOTIVO: <explicación breve con los números>",
+          "maxIterations": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        260
+      ],
+      "id": "7247de68-2427-4d48-b3f7-4109c2134314",
+      "name": "Critic (recalcula y compara)"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        760,
+        480
+      ],
+      "id": "e2c1662e-f855-42dd-bb1a-23127068cdfe",
+      "name": "Chat Model (Groq) - Critic"
+    },
+    {
+      "parameters": {
+        "content": "## Práctica 2 · VERSIÓN REPARADA\nDos cambios respecto de la version rota:\n1. El Planner ahora incluye la politica de $35/dia en el contrato de datos hacia el Worker.\n2. El Critic ya no es un chequeo de formato: es un agente que RECALCULA el monto esperado y lo compara contra lo que puso el Worker.\n\nCorré el workflow: el resultado ahora debe dar APROBADO con $245 (7 x $35), o RECHAZADO si el Worker se equivoca.",
+        "width": 560,
+        "height": 260,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -320
+      ],
+      "id": "37587567-094c-416f-a996-080bc8096204",
+      "name": "Nota e5e1"
+    },
+    {
+      "parameters": {
+        "content": "## La reparación, en una frase\nEl contrato de datos ahora lleva TODO el contexto necesario (la politica), y el Critic tiene un criterio DISTINTO al del Worker: no confirma formato, verifica el numero.",
+        "width": 400,
+        "height": 170,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -260
+      ],
+      "id": "7d19c0c1-86c8-4479-a0a3-496f85a3aed0",
+      "name": "Nota 6364"
+    }
+  ],
+  "connections": {
+    "Ejecutar autopsia": {
+      "main": [
+        [
+          {
+            "node": "Datos del viaje (fijos)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datos del viaje (fijos)": {
+      "main": [
+        [
+          {
+            "node": "Planner (incluye política)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planner (incluye política)": {
+      "main": [
+        [
+          {
+            "node": "Worker (usa la política real)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model (Groq) - Worker": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Worker (usa la política real)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worker (usa la política real)": {
+      "main": [
+        [
+          {
+            "node": "Critic (recalcula y compara)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model (Groq) - Critic": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Critic (recalcula y compara)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
